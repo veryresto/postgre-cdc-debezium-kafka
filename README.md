@@ -2,6 +2,54 @@
 
 This repository helps you reproduce a Change Data Capture (CDC) setup using PostgreSQL, Kafka, and Debezium.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    %% ======================
+    %% Source Environment
+    %% ======================
+    subgraph Source_VM["GCP VM (Ubuntu 22.04)"]
+        subgraph Docker_Source["Docker"]
+            PG_SRC[(PostgreSQL - Source DB)]
+            WAL[(WAL - Logical Replication)]
+            SLOT[(Replication Slot)]
+        end
+    end
+
+    %% ======================
+    %% CDC Platform
+    %% ======================
+    subgraph CDC_Platform["CDC Platform (Docker)"]
+        ZK[(Zookeeper)]
+        KAFKA[(Kafka)]
+
+        subgraph Kafka_Connect["Kafka Connect"]
+            SRC_CONN[Debezium - Postgres Source Connector]
+            SINK_CONN[Debezium - JDBC Sink Connector]
+        end
+    end
+
+    %% ======================
+    %% Target Environment
+    %% ======================
+    subgraph Target_VM["Target Environment"]
+        subgraph Docker_Target["Docker"]
+            PG_TGT[(PostgreSQL - Target DB)]
+        end
+    end
+
+    %% ======================
+    %% Data Flow
+    %% ======================
+    PG_SRC -->|INSERT / UPDATE / DELETE| WAL
+    WAL --> SLOT
+    SLOT -->|Logical decoding| SRC_CONN
+    SRC_CONN -->|CDC events| KAFKA
+    KAFKA -->|Consume events| SINK_CONN
+    SINK_CONN -->|UPSERT / DELETE| PG_TGT
+```
+
 ## Prerequisites
 
 - Docker and Docker Compose installed.
