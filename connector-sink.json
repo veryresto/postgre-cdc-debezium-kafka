@@ -1,0 +1,16 @@
+{
+    "name": "pg-sink",
+    "config": {
+        "connector.class": "io.debezium.connector.jdbc.JdbcSinkConnector",
+        "connection.url": "jdbc:postgresql://pgtarget:5432/postgres",
+        "connection.username": "postgres",
+        "connection.password": "targetpass",
+        "topics": "pgserver1.public.orders",
+        "insert.mode": "upsert",
+        "primary.key.mode": "record_key",
+        "primary.key.fields": "id",
+        "auto.create": true,
+        "schema.evolution": "basic",
+        "table.name.format": "public.orders"
+    }
+}

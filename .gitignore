@@ -1,0 +1,13 @@
+
+# Docker
+.docker/
+docker-auto-gen/
+portainer_data/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
