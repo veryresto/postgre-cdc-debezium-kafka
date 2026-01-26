@@ -1,0 +1,11 @@
+FROM debezium/connect:2.6
+
+USER root
+
+# Install S3 Sink Connector
+RUN curl -sL https://packages.confluent.io/archive/7.6/confluent-7.6.0.tar.gz \
+    | tar -xz -C /tmp && \
+    cp -r /tmp/confluent-7.6.0/share/java/kafka-connect-s3 /kafka/connect/ && \
+    rm -rf /tmp/confluent-7.6.0
+
+USER kafka

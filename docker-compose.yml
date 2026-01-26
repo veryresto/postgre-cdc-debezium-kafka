@@ -9,12 +9,12 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: sourcepass
-    command: 
-      - "postgres" 
-      - "-c" 
+    command:
+      - "postgres"
+      - "-c"
       - "wal_level=logical" # Directly enabling logical replication here to save a step!
     volumes:
-       - pgsource_data:/var/lib/postgresql/data
+      - pgsource_data:/var/lib/postgresql/data
 
   # Target Database
   pgtarget:
@@ -25,7 +25,7 @@ services:
     environment:
       POSTGRES_PASSWORD: targetpass
     volumes:
-       - pgtarget_data:/var/lib/postgresql/data
+      - pgtarget_data:/var/lib/postgresql/data
 
   # Zookeeper
   zookeeper:
@@ -54,7 +54,9 @@ services:
 
   # Debezium Connect
   connect:
-    image: debezium/connect:2.6
+    build:
+      context: .
+      dockerfile: Dockerfile.connect
     container_name: connect
     depends_on:
       - kafka
@@ -84,6 +86,17 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    command: server /data --console-address ":9001"
 
 volumes:
   pgsource_data:
