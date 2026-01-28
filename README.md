@@ -103,6 +103,26 @@ Check status:
 curl -H "Accept:application/json" http://localhost:8083/connectors/pg-sink/status
 ```
 
+### 6. Register S3 Sink Connector
+
+Register the sink connector to replicate data to the target Postgres:
+
+```bash
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
+  http://localhost:8083/connectors/ \
+  -d @connector-sink-s3.json
+```
+
+Check status:
+```bash
+curl -H "Accept:application/json" http://localhost:8083/connectors/s3-sink-orders/status
+```
+
+Delete connector:
+```bash
+curl -X DELETE http://localhost:8083/connectors/s3-sink-orders
+```
+
 ## Verify Replication
 
 1. **Insert data into Source**:
