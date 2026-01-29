@@ -85,6 +85,23 @@ services:
     command: server /data
     restart: unless-stopped
 
+  spark:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
+    container_name: spark
+    depends_on:
+      - kafka
+      - minio
+    environment:
+      SPARK_MODE: master
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+    volumes:
+      - ./spark:/opt/spark-apps
+    ports:
+      - "4040:4040"
+
 volumes:
   pgsource_data:
   pgtarget_data:
