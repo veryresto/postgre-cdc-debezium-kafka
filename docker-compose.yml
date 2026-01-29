@@ -99,6 +99,7 @@ services:
       AWS_SECRET_ACCESS_KEY: minio123
     volumes:
       - ./spark:/opt/spark-apps
+    command: tail -f /dev/null
     ports:
       - "4040:4040"
 
