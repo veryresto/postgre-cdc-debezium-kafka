@@ -6,14 +6,12 @@ echo "Starting generic Iceberg CDC write job..."
 # Helper to run spark-shell with necessary packages and configuration
 # Added software.amazon.awssdk:bundle:2.20.160 to support S3FileIO (AWS SDK v2)
 docker compose exec -T spark spark-shell \
-  --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,software.amazon.awssdk:bundle:2.20.160 \
+  --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 \
   --conf spark.jars.ivy=/tmp/.ivy \
   --conf spark.sql.catalog.local=org.apache.iceberg.spark.SparkCatalog \
   --conf spark.sql.catalog.local.type=hadoop \
   --conf spark.sql.catalog.local.warehouse=s3a://warehouse \
-  --conf spark.sql.catalog.local.io-impl=org.apache.iceberg.aws.s3.S3FileIO \
-  --conf spark.sql.catalog.local.s3.endpoint=http://minio:9000 \
-  --conf spark.sql.catalog.local.s3.path-style-access=true \
+  --conf spark.sql.catalog.local.io-impl=org.apache.iceberg.hadoop.HadoopFileIO \
   --conf spark.sql.defaultCatalog=local \
   <<EOF
 
