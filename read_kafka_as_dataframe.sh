@@ -33,7 +33,7 @@ val decodeDecimal = udf { (value: String, scale: Int) =>
   if (value == null) null
   else {
     val bytes = Base64.getDecoder.decode(value)
-    new BigDecimal(new BigInt(bytes).bigInteger, scale)
+    new BigDecimal(BigInt(bytes).bigInteger, scale)
   }
 }
 
