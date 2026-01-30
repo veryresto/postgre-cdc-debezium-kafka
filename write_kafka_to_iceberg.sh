@@ -94,7 +94,7 @@ val normalized = parsed.select(
   decodeDecimal(
     col("after.amount.value"),
     col("after.amount.scale")
-  ).as("amount"),
+  ).cast(DecimalType(18,6)).as("amount"),
   col("after.status").as("status"),
   (col("after.created_at") / 1000000).
     cast(TimestampType).
