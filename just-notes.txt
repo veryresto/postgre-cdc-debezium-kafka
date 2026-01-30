@@ -1,3 +1,4 @@
+# spark
 spark.sql("SELECT * FROM local.db.test_iceberg").show();
 
 spark.sql("SELECT * FROM local.db.test_iceberg WHERE id = 1").show();
@@ -7,3 +8,9 @@ spark.sql("UPDATE local.db.test_iceberg SET name = 'alice_v2' WHERE id = 1");
 
 spark.sql("DELETE FROM local.db.test_iceberg WHERE id = 2");
 
+# sql query postgre
+INSERT INTO orders (customer_name, amount, status) 
+VALUES 
+('ferdinan', 250, 'NEW')
+
+UPDATE orders SET amount=320 WHERE id=9;

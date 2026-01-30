@@ -1,0 +1,276 @@
+{
+    "schema": {
+        "type": "struct",
+        "fields": [
+            {
+                "type": "struct",
+                "fields": [
+                    {
+                        "type": "int32",
+                        "optional": false,
+                        "default": 0,
+                        "field": "id"
+                    },
+                    {
+                        "type": "string",
+                        "optional": true,
+                        "field": "customer_name"
+                    },
+                    {
+                        "type": "struct",
+                        "fields": [
+                            {
+                                "type": "int32",
+                                "optional": false,
+                                "field": "scale"
+                            },
+                            {
+                                "type": "bytes",
+                                "optional": false,
+                                "field": "value"
+                            }
+                        ],
+                        "optional": true,
+                        "name": "io.debezium.data.VariableScaleDecimal",
+                        "version": 1,
+                        "doc": "Variable scaled decimal",
+                        "field": "amount"
+                    },
+                    {
+                        "type": "string",
+                        "optional": true,
+                        "field": "status"
+                    },
+                    {
+                        "type": "int64",
+                        "optional": true,
+                        "name": "io.debezium.time.MicroTimestamp",
+                        "version": 1,
+                        "default": 0,
+                        "field": "created_at"
+                    }
+                ],
+                "optional": true,
+                "name": "pgserver1.public.orders.Value",
+                "field": "before"
+            },
+            {
+                "type": "struct",
+                "fields": [
+                    {
+                        "type": "int32",
+                        "optional": false,
+                        "default": 0,
+                        "field": "id"
+                    },
+                    {
+                        "type": "string",
+                        "optional": true,
+                        "field": "customer_name"
+                    },
+                    {
+                        "type": "struct",
+                        "fields": [
+                            {
+                                "type": "int32",
+                                "optional": false,
+                                "field": "scale"
+                            },
+                            {
+                                "type": "bytes",
+                                "optional": false,
+                                "field": "value"
+                            }
+                        ],
+                        "optional": true,
+                        "name": "io.debezium.data.VariableScaleDecimal",
+                        "version": 1,
+                        "doc": "Variable scaled decimal",
+                        "field": "amount"
+                    },
+                    {
+                        "type": "string",
+                        "optional": true,
+                        "field": "status"
+                    },
+                    {
+                        "type": "int64",
+                        "optional": true,
+                        "name": "io.debezium.time.MicroTimestamp",
+                        "version": 1,
+                        "default": 0,
+                        "field": "created_at"
+                    }
+                ],
+                "optional": true,
+                "name": "pgserver1.public.orders.Value",
+                "field": "after"
+            },
+            {
+                "type": "struct",
+                "fields": [
+                    {
+                        "type": "string",
+                        "optional": false,
+                        "field": "version"
+                    },
+                    {
+                        "type": "string",
+                        "optional": false,
+                        "field": "connector"
+                    },
+                    {
+                        "type": "string",
+                        "optional": false,
+                        "field": "name"
+                    },
+                    {
+                        "type": "int64",
+                        "optional": false,
+                        "field": "ts_ms"
+                    },
+                    {
+                        "type": "string",
+                        "optional": true,
+                        "name": "io.debezium.data.Enum",
+                        "version": 1,
+                        "parameters": {
+                            "allowed": "true,last,false,incremental"
+                        },
+                        "default": "false",
+                        "field": "snapshot"
+                    },
+                    {
+                        "type": "string",
+                        "optional": false,
+                        "field": "db"
+                    },
+                    {
+                        "type": "string",
+                        "optional": true,
+                        "field": "sequence"
+                    },
+                    {
+                        "type": "int64",
+                        "optional": true,
+                        "field": "ts_us"
+                    },
+                    {
+                        "type": "int64",
+                        "optional": true,
+                        "field": "ts_ns"
+                    },
+                    {
+                        "type": "string",
+                        "optional": false,
+                        "field": "schema"
+                    },
+                    {
+                        "type": "string",
+                        "optional": false,
+                        "field": "table"
+                    },
+                    {
+                        "type": "int64",
+                        "optional": true,
+                        "field": "txId"
+                    },
+                    {
+                        "type": "int64",
+                        "optional": true,
+                        "field": "lsn"
+                    },
+                    {
+                        "type": "int64",
+                        "optional": true,
+                        "field": "xmin"
+                    }
+                ],
+                "optional": false,
+                "name": "io.debezium.connector.postgresql.Source",
+                "field": "source"
+            },
+            {
+                "type": "string",
+                "optional": false,
+                "field": "op"
+            },
+            {
+                "type": "int64",
+                "optional": true,
+                "field": "ts_ms"
+            },
+            {
+                "type": "int64",
+                "optional": true,
+                "field": "ts_us"
+            },
+            {
+                "type": "int64",
+                "optional": true,
+                "field": "ts_ns"
+            },
+            {
+                "type": "struct",
+                "fields": [
+                    {
+                        "type": "string",
+                        "optional": false,
+                        "field": "id"
+                    },
+                    {
+                        "type": "int64",
+                        "optional": false,
+                        "field": "total_order"
+                    },
+                    {
+                        "type": "int64",
+                        "optional": false,
+                        "field": "data_collection_order"
+                    }
+                ],
+                "optional": true,
+                "name": "event.block",
+                "version": 1,
+                "field": "transaction"
+            }
+        ],
+        "optional": false,
+        "name": "pgserver1.public.orders.Envelope",
+        "version": 2
+    },
+    "payload": {
+        "before": null,
+        "after": {
+            "id": 9,
+            "customer_name": "ferdinan",
+            "amount": {
+                "scale": 0,
+                "value": "AUA="
+            },
+            "status": "NEW",
+            "created_at": 1769782571946889
+        },
+        "source": {
+            "version": "2.6.2.Final",
+            "connector": "postgresql",
+            "name": "pgserver1",
+            "ts_ms": 1769757420354,
+            "snapshot": "false",
+            "db": "cdc_demo",
+            "sequence": "[\"24346768\",\"24346824\"]",
+            "ts_us": 1769757420354435,
+            "ts_ns": 1769757420354435000,
+            "schema": "public",
+            "table": "orders",
+            "txId": 754,
+            "lsn": 24346824,
+            "xmin": null
+        },
+        "op": "u",
+        "ts_ms": 1769757420586,
+        "ts_us": 1769757420586124,
+        "ts_ns": 1769757420586124677,
+        "transaction": null
+    }
+}
