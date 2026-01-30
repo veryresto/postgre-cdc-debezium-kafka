@@ -116,7 +116,7 @@ try {
   val query = enriched.writeStream.
     format("iceberg").
     outputMode("append").
-    option("checkpointLocation", "s3a://warehouse/checkpoints/orders").
+    option("checkpointLocation", "/tmp/orders_checkpoint").
     toTable("local.db.orders")
 
   query.awaitTermination(90000) // Run for 90 seconds to process data
