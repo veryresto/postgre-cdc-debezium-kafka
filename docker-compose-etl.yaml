@@ -1,0 +1,48 @@
+services:
+  # Spark & MinIO (AI-ETL)
+  # Role: Compute + Data Engineering Brain
+
+  minio:
+    image: minio/minio:RELEASE.2020-12-26T01-35-54Z
+    container_name: minio
+    ports:
+      - target: 9000
+        published: 9000
+        protocol: tcp
+        mode: host
+      # Mapping 9001 just in case later versions are used or it's needed, 
+      # though valid config for this old image focuses on 9000.
+      - target: 9001
+        published: 9001
+        protocol: tcp
+        mode: host
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    volumes:
+      - minio_data:/data
+
+  spark:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
+    container_name: spark
+    depends_on:
+      - minio
+    environment:
+      SPARK_MODE: master
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      # Spark will need to connect to:
+      # 1. MinIO: 'minio:9000' (local service)
+      # 2. Kafka: '172.16.13.159:9092' (remote)
+    volumes:
+      - ./spark:/opt/spark-apps
+    command: tail -f /dev/null
+    ports:
+      - "4040:4040"
+
+volumes:
+  minio_data:

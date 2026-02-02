@@ -1,0 +1,6 @@
+# AI-SERVING (172.16.13.161)
+# Role: Dormant (Future Query & API Layer)
+# Currently no active services required for the ingestion path.
+# Reserved for future Trino, ClickHouse, or API Layer.
+
+services: {}

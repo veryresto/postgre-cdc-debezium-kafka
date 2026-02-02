@@ -1,0 +1,51 @@
+services:
+  # Kafka & Connect (AI-LANDING-DB)
+  # Role: CDC + Kafka Core
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Internal listener for local services (like Connect)
+      # External listener for remote services (like Spark on AI-ETL)
+      # We advertise the host IP 172.16.13.159
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://172.16.13.159:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+  connect:
+    build:
+      context: .
+      dockerfile: Dockerfile.connect
+    container_name: connect
+    depends_on:
+      - kafka
+    ports:
+      - "8083:8083"
+    environment:
+      # Connects to Kafka via the internal network or the advertised host IP. 
+      # Using the service name 'kafka' works because they are in the same compose, 
+      # but since Kafka advertises 172.16.13.159, Connect might need to resolve that.
+      # Ideally, Connect should use the internal service name 'kafka:9092' but 
+      # if Kafka advertises an IP, clients must be able to reach that IP.
+      # Since Connect is on the same host (172.16.13.159), it can reach 172.16.13.159.
+      BOOTSTRAP_SERVERS: 172.16.13.159:9092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
