@@ -1,143 +1,140 @@
-# PostgreSQL CDC with Debezium & Kafka
+# End-to-End CDC Pipeline: Postgres to Iceberg
 
-This repository helps you reproduce a Change Data Capture (CDC) setup using PostgreSQL, Kafka, and Debezium.
+This repository implements a complete Change Data Capture (CDC) pipeline using:
+- **Source**: PostgreSQL (System of Record)
+- **Ingestion**: Debezium & Kafka
+- **Processing**: Apache Spark (Structured Streaming)
+- **Storage**: Apache Iceberg on MinIO (S3-compatible object storage)
+
+It demonstrates how to stream database changes in real-time into an Iceberg data lake across a distributed 4-server architecture.
 
 ## Prerequisites
 
 - Docker and Docker Compose installed.
 
-## Quick Start
+## Distributed Deployment Guide
 
-### 1. Start the Stack
+This project is configured to run across 4 servers:
 
-Run the following command to start all services (Source DB, Target DB, Kafka, Zookeeper, Debezium, Portainer):
+1.  **AI-MASTER-DB** (`172.16.13.158`): Source PostgreSQL.
+2.  **AI-LANDING-DB** (`172.16.13.159`): Kafka & Debezium Connect.
+3.  **AI-ETL** (`172.16.13.160`): Spark & MinIO.
+4.  **AI-SERVING** (`172.16.13.161`): Dormant (Future use).
 
-```bash
-docker compose up -d
-```
+### Step 0: Preparation
 
-> **Note:** The `pgsource` container is pre-configured with `wal_level=logical` via the docker command, so you don't need to manually edit `postgresql.conf`!
-
-### 2. Prepare Source Database
-
-Log into the source database container:
+Clone this repository to **ALL 4 servers** to ensure all configuration files are present.
 
 ```bash
-docker exec -it pgsource bash
+# On all servers
+git clone <your-repo-url> .
 ```
 
-Run `psql`:
+### Step 1: AI-MASTER-DB (Source DB)
 
-```bash
-psql -U postgres
-```
+Host: `172.16.13.158`
 
-Inside `psql`, run the following SQL commands to create the CDC user, database, and permission:
+1.  Start the database:
+    ```bash
+    docker compose -f docker-compose-master-db.yaml up -d
+    ```
 
-```sql
--- Create CDC user
-CREATE ROLE cdc_user WITH LOGIN PASSWORD 'cdcpass';
-ALTER ROLE cdc_user REPLICATION;
-GRANT CONNECT ON DATABASE postgres TO cdc_user;
+2.  Initialize the database and user (Run inside the container):
+    ```bash
+    docker exec -it pgsource psql -U postgres
+    ```
 
--- Create Demo Database and Switch to it
-CREATE DATABASE cdc_demo;
-\c cdc_demo;
+3.  Paste the following SQL to create the user and table:
+    ```sql
+    -- Create CDC user
+    CREATE ROLE cdc_user WITH LOGIN PASSWORD 'cdcpass';
+    ALTER ROLE cdc_user REPLICATION;
+    GRANT CONNECT ON DATABASE postgres TO cdc_user;
 
--- Create Table
-CREATE TABLE orders (
-  id SERIAL PRIMARY KEY,
-  customer_name TEXT,
-  amount NUMERIC,
-  status TEXT,
-  created_at TIMESTAMP DEFAULT now()
-);
+    -- Create Demo Database
+    CREATE DATABASE cdc_demo;
+    \c cdc_demo;
 
--- Insert Initial Data
-INSERT INTO orders (customer_name, amount, status) VALUES ('Alice', 100, 'NEW');
+    -- Create Table and Permissions
+    CREATE TABLE orders (
+      id SERIAL PRIMARY KEY,
+      customer_name TEXT,
+      amount NUMERIC,
+      status TEXT,
+      created_at TIMESTAMP DEFAULT now()
+    );
+    INSERT INTO orders (customer_name, amount, status) VALUES ('Alice', 100, 'NEW');
+    
+    CREATE PUBLICATION cdc_pub FOR ALL TABLES;
+    ALTER TABLE public.orders OWNER to cdc_user;
+    ```
+    Exit with `\q`.
 
--- Enable Publication
-CREATE PUBLICATION cdc_pub FOR ALL TABLES;
+### Step 2: AI-LANDING-DB (Kafka & Connect)
 
--- Give ownership to cdc_user (Debezium needs this to see changes seamlessly)
-ALTER TABLE public.orders OWNER to cdc_user;
-```
+Host: `172.16.13.159`
 
-Exit `psql` (`\q`) and the container (`exit`).
+1.  Start the services:
+    ```bash
+    docker compose -f docker-compose-landing-db.yaml up -d
+    ```
+    *Wait ~30 seconds for Kafka and Connect to start.*
 
-### 3. Register Debezium Source Connector
+2.  Register the Connector:
+    Uses `connector-source-distributed.json` which points to `172.16.13.158`.
 
-Register the PostgreSQL source connector using the provided JSON config:
+    ```bash
+    curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
+      http://localhost:8083/connectors/ \
+      -d @connector-source-distributed.json
+    ```
 
-```bash
-curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
-  http://localhost:8083/connectors/ \
-  -d @connector-source.json
-```
+3.  Check Status:
+    ```bash
+    curl http://localhost:8083/connectors/pg-cdc-source/status
+    ```
+    Ensure `state` is `RUNNING`.
 
-Check status:
-```bash
-curl -H "Accept:application/json" http://localhost:8083/connectors/pg-cdc-source/status
-```
+### Step 3: AI-ETL (Processing)
 
-### 4. Prepare Target Database (Optional but Recommended)
+Host: `172.16.13.160`
 
-Although the Sink Connector is configured to `auto.create` tables, creating the table manually ensures types are exactly as expected.
+1.  Start Spark and MinIO:
+    ```bash
+    docker compose -f docker-compose-etl.yaml up -d
+    ```
 
-```bash
-docker exec -it pgtarget psql -U postgres -c "CREATE TABLE orders (id SERIAL PRIMARY KEY, customer_name TEXT, amount NUMERIC, status TEXT, created_at TIMESTAMP DEFAULT now());"
-```
+2.  Run the verification job:
+    This script reads from Kafka (`172.16.13.159`) and writes to local MinIO.
 
-### 5. Register JDBC Sink Connector
+    ```bash
+    # Grant execution permission
+    chmod +x write_kafka_to_iceberg_distributed.sh
+    
+    # Run the job
+    ./write_kafka_to_iceberg_distributed.sh
+    ```
 
-Register the sink connector to replicate data to the target Postgres:
+### Step 4: Verification
 
-```bash
-curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
-  http://localhost:8083/connectors/ \
-  -d @connector-sink.json
-```
+1.  **Generate Data**:
+    On **AI-MASTER-DB**:
+    ```bash
+    docker exec -it pgsource psql -U postgres -d cdc_demo -c "INSERT INTO orders (customer_name, amount, status) VALUES ('Bob', 250, 'PAID');"
+    ```
 
-Check status:
-```bash
-curl -H "Accept:application/json" http://localhost:8083/connectors/pg-sink/status
-```
+2.  **Check Processing**:
+    Watch the output of the Spark script on **AI-ETL**. It should process the new event.
 
-### 6. Register S3 Sink Connector
-
-Register the sink connector to replicate data to the target Postgres:
-
-```bash
-curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
-  http://localhost:8083/connectors/ \
-  -d @connector-sink-s3.json
-```
-
-Check status:
-```bash
-curl -H "Accept:application/json" http://localhost:8083/connectors/s3-sink-orders/status
-```
-
-Delete connector:
-```bash
-curl -X DELETE http://localhost:8083/connectors/s3-sink-orders
-```
-
-## Verify Replication
-
-1. **Insert data into Source**:
-   ```bash
-   docker exec -it pgsource psql -U postgres -d cdc_demo -c "INSERT INTO orders (customer_name, amount, status) VALUES ('Bob', 250, 'PAID');"
-   ```
-
-2. **Check Target**:
-   ```bash
-   docker exec -it pgtarget psql -U postgres -c "SELECT * FROM orders;"
-   ```
-
-You should see 'Bob' in the target database!
+3.  **Check Storage**:
+    Open MinIO Console on `http://172.16.13.160:9001` (if port mapped) or check files via CLI:
+    ```bash
+    # On AI-ETL
+    docker exec -it minio ls -R /data/warehouse
+    ```
 
 ## Troubleshooting
 
-- **Check Logs**: `docker compose logs -f connect` to see Debezium logs.
-- **Portainer**: Open `http://localhost:9000` to inspect containers visually.
+- **Check Logs**:
+  - `docker compose -f <file> logs -f <service>`
+- **Portainer**: If installed, inspect containers visually.
