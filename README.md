@@ -104,7 +104,13 @@ Host: `172.16.13.160`
     docker compose -f docker-compose-etl.yaml up -d
     ```
 
-2.  Run the verification job:
+2.  Create Bucket:
+    ```bash
+    # Create valid bucket for warehouse
+    docker exec minio mkdir -p /data/warehouse
+    ```
+
+3.  Run the verification job:
     This script reads from Kafka (`172.16.13.159`) and writes to local MinIO.
 
     ```bash
@@ -133,11 +139,12 @@ Host: `172.16.13.160`
     docker exec -it minio ls -R /data/warehouse
     ```
 
-    # Grant execution permission
-    chmod +x verify_iceberg_data_distributed.sh
+4.  **Check Content via Spark SQL**:
+    Run the distributed verification script to query the Iceberg table:
 
-    # Run the verification script
+    ```bash
     ./verify_iceberg_data_distributed.sh
+    ```
 
 
 ## Troubleshooting
