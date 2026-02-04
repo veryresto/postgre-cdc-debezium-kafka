@@ -133,6 +133,13 @@ Host: `172.16.13.160`
     docker exec -it minio ls -R /data/warehouse
     ```
 
+    # Grant execution permission
+    chmod +x verify_iceberg_data_distributed.sh
+
+    # Run the verification script
+    ./verify_iceberg_data_distributed.sh
+
+
 ## Troubleshooting
 
 - **Check Logs**:
