@@ -99,12 +99,23 @@ Host: `172.16.13.159`
 
 Host: `172.16.13.160`
 
-1.  Start Spark and MinIO:
+1.  **Prepare Hive Metastore (One-time Setup)**:
+    Download the required AWS JARs to enable S3 access for Hive:
+    ```bash
+    # Create lib directory
+    mkdir -p hive/lib
+
+    # Download Hadoop AWS and AWS SDK Bundle
+    curl -L -o hive/lib/hadoop-aws-3.3.6.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.6/hadoop-aws-3.3.6.jar
+    curl -L -o hive/lib/aws-java-sdk-bundle-1.12.367.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.367/aws-java-sdk-bundle-1.12.367.jar
+    ```
+
+2.  Start Spark, MinIO, Trino, and Hive Metastore:
     ```bash
     docker compose -f docker-compose-etl.yaml up -d
     ```
 
-2.  Create Bucket:
+3.  Create Bucket:
     ```bash
     # Create valid bucket for warehouse
     docker exec minio mkdir -p /data/warehouse
@@ -144,6 +155,32 @@ Host: `172.16.13.160`
 
     ```bash
     ./verify_iceberg_data_distributed.sh
+    ```
+
+### Step 5: Querying with Trino (SQL Interface)
+
+Trino provides a powerful SQL interface to query your Iceberg tables.
+
+1.  **Start Trino CLI**:
+    ```bash
+    docker compose exec trino trino
+    ```
+
+2.  **Verify Tables**:
+    ```sql
+    SHOW SCHEMAS FROM iceberg;
+    SHOW TABLES FROM iceberg.db;
+    SELECT * FROM iceberg.db.orders;
+    ```
+
+    > **Note:** If the `orders` table is missing (e.g., after restarting Hive Metastore), you can register the existing data from MinIO:
+    > ```sql
+    > CALL iceberg.system.register_table('db', 'orders', 's3://warehouse/db/orders');
+    > ```
+
+3.  **Run Automated Verification**:
+    ```bash
+    ./verify_trino.sh
     ```
 
 

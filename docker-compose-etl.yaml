@@ -44,5 +44,29 @@ services:
     ports:
       - "4040:4040"
 
+  trino:
+    image: trinodb/trino:451
+    container_name: trino
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./trino/etc:/etc/trino
+    depends_on:
+      - minio
+
+  hive-metastore:
+    image: apache/hive:4.0.0
+    container_name: hive-metastore
+    environment:
+      SERVICE_NAME: metastore
+    ports:
+      - "9083:9083"
+    volumes:
+      - ./hive/conf:/opt/hive/conf
+      - ./hive/lib/hadoop-aws-3.3.6.jar:/opt/hive/lib/hadoop-aws-3.3.6.jar
+      - ./hive/lib/aws-java-sdk-bundle-1.12.367.jar:/opt/hive/lib/aws-java-sdk-bundle-1.12.367.jar
+    depends_on:
+      - minio
+
 volumes:
   minio_data:
