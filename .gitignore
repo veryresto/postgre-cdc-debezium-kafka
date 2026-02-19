@@ -16,3 +16,6 @@ plugins/
 
 # Environment
 .env
+
+# Hive
+hive/lib/
