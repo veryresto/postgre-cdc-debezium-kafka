@@ -42,6 +42,6 @@
     </property>
     <property>
         <name>hive.metastore.warehouse.dir</name>
-        <value>s3://warehouse/</value>
+        <value>s3a://warehouse/</value>
     </property>
 </configuration>

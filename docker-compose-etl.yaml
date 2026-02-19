@@ -35,6 +35,7 @@ services:
       SPARK_MODE: master
       AWS_ACCESS_KEY_ID: minio
       AWS_SECRET_ACCESS_KEY: minio123
+      LANDING_DB_HOST: ${LANDING_DB_HOST:-127.0.0.1}
       # Spark will need to connect to:
       # 1. MinIO: 'minio:9000' (local service)
       # 2. Kafka: '${LANDING_DB_HOST}:9092' (remote or host IP)
