@@ -13,3 +13,6 @@ portainer_data/
 Thumbs.db
 
 plugins/
+
+# Environment
+.env

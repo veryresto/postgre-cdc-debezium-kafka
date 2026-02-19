@@ -72,8 +72,8 @@ println("Iceberg table created/verified.")
 
 val rawKafka = spark.readStream.
   format("kafka").
-  // Connecting to Kafka on AI-LANDING-DB
-  option("kafka.bootstrap.servers", "172.16.13.159:9092").
+  // Connecting to Kafka on LANDING_DB_HOST
+  option("kafka.bootstrap.servers", s"${sys.env.getOrElse("LANDING_DB_HOST", "127.0.0.1")}:9092").
   option("subscribe", "pgserver1.public.orders").
   option("startingOffsets", "earliest").
   load()

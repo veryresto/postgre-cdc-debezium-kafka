@@ -12,9 +12,49 @@ It demonstrates how to stream database changes in real-time into an Iceberg data
 
 - Docker and Docker Compose installed.
 
-## Distributed Deployment Guide
+## Deployment Guide
 
-This project is configured to run across 4 servers:
+You can deploy this pipeline either in a **Single VM** (Recommended for dev/test) or across **4 Distributed Servers**.
+
+### Configuration (.env)
+
+Before deploying, create a `.env` file from the example:
+```bash
+cp .env-example .env
+```
+
+Edit `.env` and set the IP address of your VM (or the specific server IPs if distributed).
+
+---
+
+### Option A: Single VM Deployment
+
+1.  **Set IPs to Localhost**:
+    In `.env`, set all hosts to your VM's private IP (e.g., `172.16.13.158`) or `127.0.0.1`.
+
+2.  **Start All Services**:
+    ```bash
+    docker compose -f docker-compose-master-db.yaml \
+                   -f docker-compose-landing-db.yaml \
+                   -f docker-compose-etl.yaml up -d
+    ```
+
+3.  **Register Connector**:
+    ```bash
+    # Load .env variables and substitute placeholder in JSON
+    export $(grep -v '^#' .env | xargs)
+    envsubst < connector-source-distributed.json | curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
+      http://localhost:8083/connectors/ -d @-
+    ```
+
+4.  **Run Spark Job**:
+    ```bash
+    ./write_kafka_to_iceberg_distributed.sh
+    ```
+
+---
+
+### Option B: Distributed Deployment Guide
 
 1.  **AI-MASTER-DB** (`172.16.13.158`): Source PostgreSQL.
 2.  **AI-LANDING-DB** (`172.16.13.159`): Kafka & Debezium Connect.
@@ -84,9 +124,10 @@ Host: `172.16.13.159`
     Uses `connector-source-distributed.json` which points to `172.16.13.158`.
 
     ```bash
-    curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
-      http://localhost:8083/connectors/ \
-      -d @connector-source-distributed.json
+    # Load .env and substitute IPs
+    export $(grep -v '^#' .env | xargs)
+    envsubst < connector-source-distributed.json | curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
+      http://localhost:8083/connectors/ -d @-
     ```
 
 3.  Check Status:
@@ -122,7 +163,7 @@ Host: `172.16.13.160`
     ```
 
 3.  Run the verification job:
-    This script reads from Kafka (`172.16.13.159`) and writes to local MinIO.
+    This script reads from Kafka (using `LANDING_DB_HOST` from `.env`) and writes to local MinIO.
 
     ```bash
     # Grant execution permission

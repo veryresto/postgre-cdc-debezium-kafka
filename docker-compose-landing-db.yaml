@@ -21,9 +21,9 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       # Internal listener for local services (like Connect)
       # External listener for remote services (like Spark on AI-ETL)
-      # We advertise the host IP 172.16.13.159
+      # We advertise the host IP specified in .env
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://172.16.13.159:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${LANDING_DB_HOST:-127.0.0.1}:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -43,8 +43,8 @@ services:
       # but since Kafka advertises 172.16.13.159, Connect might need to resolve that.
       # Ideally, Connect should use the internal service name 'kafka:9092' but 
       # if Kafka advertises an IP, clients must be able to reach that IP.
-      # Since Connect is on the same host (172.16.13.159), it can reach 172.16.13.159.
-      BOOTSTRAP_SERVERS: 172.16.13.159:9092
+      # Since Connect is on the same host, it can reach the advertised IP.
+      BOOTSTRAP_SERVERS: ${LANDING_DB_HOST:-127.0.0.1}:9092
       GROUP_ID: 1
       CONFIG_STORAGE_TOPIC: connect_configs
       OFFSET_STORAGE_TOPIC: connect_offsets

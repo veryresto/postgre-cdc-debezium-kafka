@@ -2,7 +2,7 @@
   "name": "pg-cdc-source",
   "config": {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-    "database.hostname": "172.16.13.158",
+    "database.hostname": "${MASTER_DB_HOST}",
     "database.port": "5432",
     "database.user": "cdc_user",
     "database.password": "cdcpass",
