@@ -2,7 +2,7 @@
   "name": "pg-cdc-source",
   "config": {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-    "database.hostname": "${MASTER_DB_HOST}",
+    "database.hostname": "10.148.0.5",
     "database.port": "5432",
     "database.user": "cdc_user",
     "database.password": "cdcpass",
@@ -12,6 +12,6 @@
     "slot.name": "debezium_slot",
     "publication.name": "cdc_pub",
     "publication.autocreate.mode": "disabled",
-    "snapshot.mode": "never"
+    "snapshot.mode": "initial"
   }
 }

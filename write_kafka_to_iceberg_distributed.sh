@@ -43,13 +43,14 @@ val payloadSchema = StructType(Seq(
   StructField("op", StringType, false)
 ))
 
-val decodeDecimal = udf { (value: String, scale: Int) =>
-  if (value == null) null
-  else {
-    val bytes = Base64.getDecoder.decode(value)
-    new BigDecimal(BigInt(bytes).bigInteger, scale)
+val decodeDecimal = udf((value: String, scale: Int) => {
+  if (value == null) {
+    null.asInstanceOf[java.math.BigDecimal]
+  } else {
+    val bytes = java.util.Base64.getDecoder.decode(value)
+    new java.math.BigDecimal(new java.math.BigInteger(bytes), scale)
   }
-}
+})
 
 // --- STEP 2: Create Iceberg Table (Idempotent) ---
 
